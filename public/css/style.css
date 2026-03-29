@@ -1,16 +1,27 @@
 body, html {
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
     background:#dcdcdc;
     color: black;
     font: arial;
     font-family: sans-serif;
     font-size: 20px;
+    min-height: 100vh;
+    height: 100%;
+}
+
+body.body-normal main {
+    padding-top: 80px;
+}
+
+main {
+    flex: 1;
 }
 
 header {
     position: fixed;
-    background: rgba(12, 71, 65, 0.423);
     padding: 15px;
     align-items: center;
     z-index: 10;
@@ -19,7 +30,16 @@ header {
     width: 100%;
     top: 0;
     left: 0;
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(12px);
+}
+
+body.body-index header {
+    background: rgba(12, 71, 65, 0.256);
+}
+
+body.body-normal header {
+    background: #0a373a;
+    margin-bottom: 20px;
 }
 
 header a {
@@ -28,7 +48,7 @@ header a {
     display: inline-block;
     color: white;
     padding: 10px;
-    background: #0a373a;
+    background: #136b718a;
     border: solid 3px #195c61;
     border-radius: 5px;
     transition: all 0.3s ease;
@@ -40,12 +60,12 @@ header a {
 
 header a:hover {
     transform: scale(1.1);
-    border-color: #052224;
+    border-color: #0f3d33;
 }
 
 header a:active {
     transform: scale(0.9);
-    border-color: #020c0c;
+    border-color: #0f6767;
 }
 
 nav {
@@ -60,6 +80,13 @@ nav {
 
 .nav-right {
     align-items: right;
+}
+
+footer {
+    background: #0a373a;
+    color: white;
+    text-align: center;
+    padding: 15px;
 }
 
 .hero {
@@ -103,6 +130,7 @@ nav {
     transition: all 0.3s ease;
     width: 350px;
     text-align: center;
+    content: fit-content;
 }
 
 .download:hover {
@@ -121,6 +149,7 @@ nav {
     transition: all 0.3s ease;
     width: 350px;
     text-align: center;
+    content: fit-content;
 }
 
 .use-in-browser:hover {
@@ -240,11 +269,11 @@ header i {
 /* Responsywność */
 @media (max-width: 768px) {
     .half-section {
-        flex-direction: column;       /* tekst nad obrazkiem */
+        flex-direction: column;
     }
 
     .half-section.reverse {
-        flex-direction: column;       /* również kolumna przy odwróconej */
+        flex-direction: column;
     }
 }
 
@@ -260,4 +289,34 @@ header i {
 
 .lang-btn:hover .fa-angle-up {
     transform: rotate(180deg);
+}
+
+.back-to-homepage {
+    padding: 10px 20px;
+    background: #b20d0d;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.back-to-homepage:hover {
+    background: #7b0c27;
+}
+
+.section-404 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80vh;
+    gap: 20px;
+}
+
+.image-404 {
+    max-width: 500px;
+    height: auto;
+    object-fit: contain;
 }

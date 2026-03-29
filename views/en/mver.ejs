@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="/css/style.css">
+        <link rel="stylesheet" href="/css/style-tool.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+        <meta charset="UTF-8">
+        <title>Tool - MVER</title>
+    </head>
+    <body class="body-normal">
+        <%- include('partials/header') %>
+        <main>
+            <div id="dropArea" class="drop-area">
+                <img id="preview" class="preview-image" style="display:none;">
+                <div class="drop-content" id="dropContent">
+                    <img src="/images/upload-icon.png" alt="Upload Icon" class="drop-icon">
+                    <p>Przeciągnij plik tutaj lub kliknij "Wybierz plik"</p>
+                    <button id="fileSelectBtn">Wybierz plik</button>
+                    <input type="file" id="fileInput" hidden>
+                </div>
+            </div>
+            
+            <div id="buttonContainer" style="margin-top: 20px; display:none;">
+                <button id="removeBtn">Remove Metadata & Download</button>
+                <button id="clearBtn" onclick="location.reload()">Clear Image</button>
+            </div>
+
+            <table id="metadataTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Tag ▲▼</th>
+                    <th onclick="sortTable(1)">Wartość ▲▼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Wiersze będą dodawane przez JS -->
+            </tbody>
+            </table>
+
+            <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+
+            <script>
+                const fileInput = document.getElementById('fileInput');
+                const preview = document.getElementById('preview');
+                const metadataTable = document.getElementById('metadataTable');
+                const removeBtn = document.getElementById('removeBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                const buttonContainer = document.getElementById('buttonContainer');
+                const dropArea = document.getElementById('dropArea');
+                const dropContent = document.getElementById('dropContent');
+
+                let currentFile;
+
+                // Funkcja wczytująca plik i wypełniająca tabelę EXIF
+                function handleFile(file) {
+                    if (!file) return;
+                    currentFile = file;
+
+                    const url = URL.createObjectURL(file);
+                    preview.src = url;
+                    preview.style.display = 'block';
+                    dropContent.style.display = 'none';
+                    buttonContainer.style.display = 'block';
+
+                    // czytanie metadanych EXIF
+                    EXIF.getData(file, function() {
+                        const allMeta = EXIF.getAllTags(this);
+                        metadataTable.innerHTML = '<tr><th>Tag</th><th>Wartość</th></tr>';
+                        for (let tag in allMeta) {
+                            const row = document.createElement('tr');
+                            const tagCell = document.createElement('td');
+                            const valueCell = document.createElement('td');
+
+                            tagCell.textContent = tag || ''; // Ensure empty tags are blank
+                            const value = String(allMeta[tag] || ''); // Ensure empty values are blank
+
+                            // Check if value is long (more than 80 characters)
+                            if (value.length > 80) {
+                                valueCell.classList.add('truncated');
+                                valueCell.innerHTML = `<div class="value-content">${value}</div>`;
+
+                                // Create show more button
+                                const showMoreBtn = document.createElement('button');
+                                showMoreBtn.classList.add('show-more-btn');
+                                showMoreBtn.textContent = 'Pokaż więcej';
+                                showMoreBtn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    if (valueCell.classList.contains('expanded')) {
+                                        valueCell.classList.remove('expanded');
+                                        showMoreBtn.textContent = 'Pokaż więcej';
+                                    } else {
+                                        valueCell.classList.add('expanded');
+                                        showMoreBtn.textContent = 'Pokaż mniej';
+                                    }
+                                });
+                                valueCell.appendChild(showMoreBtn);
+                            } else {
+                                valueCell.textContent = value;
+                            }
+
+                            row.appendChild(tagCell);
+                            row.appendChild(valueCell);
+                            metadataTable.appendChild(row);
+                        }
+
+                        // Adjust tag column width to fit longest tag
+                        const tagColumnWidth = Math.max(...Object.keys(allMeta).map(tag => tag.length)) * 8; // Approximate width per character
+                        metadataTable.querySelectorAll('th, td:first-child').forEach(cell => {
+                            cell.style.width = `${tagColumnWidth}px`;
+                        });
+                    });
+                }
+
+                // Input file
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        handleFile(file);
+                        fileInput.value = '';
+                    }
+                });
+
+                //document.getElementById('fileSelectBtn').addEventListener('click', () => {
+                    //fileInput.value = ''; // Reset before opening dialog
+                    //fileInput.click();
+                //});
+
+                // Drop area click to open file dialog
+                dropArea.addEventListener('click', (e) => {
+                    if (e.target !== fileInput && preview.style.display === 'none') {
+                        fileInput.value = ''; // Reset before opening dialog
+                        fileInput.click();
+                    }
+                });
+
+                // Drag & Drop
+                dropArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropArea.classList.add('dragover');
+                });
+
+                dropArea.addEventListener('dragleave', () => {
+                    dropArea.classList.remove('dragover');
+                });
+
+                dropArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropArea.classList.remove('dragover');
+                    handleFile(e.dataTransfer.files[0]);
+                });
+
+                // Usuwanie metadanych
+                removeBtn.addEventListener('click', () => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0);
+
+                            canvas.toBlob((blob) => {
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = currentFile.name.replace(/(\.\w+)$/, '_noEXIF$1');
+                                link.click();
+                            }, currentFile.type);
+                        }
+                        img.src = e.target.result;
+                    }
+                    reader.readAsDataURL(currentFile);
+                });
+
+                // Czyszczenie obrazu
+                clearBtn.addEventListener('click', () => {
+                    preview.style.display = 'none';
+                    preview.src = '';
+                    dropContent.style.display = 'flex';
+                    buttonContainer.style.display = 'none';
+                    metadataTable.innerHTML = '';
+                    currentFile = null;
+                    fileInput.value = '';
+                });
+
+                // Sortowanie tabeli
+                function sortTable(columnIndex) {
+                    const table = document.getElementById("metadataTable");
+                    const tbody = table.tBodies[0];
+                    const rows = Array.from(tbody.rows);
+                    let asc = table.dataset.sortDir !== "asc"; // zmiana kierunku sortowania
+                    table.dataset.sortDir = asc ? "asc" : "desc";
+
+                    rows.sort((a, b) => {
+                        const aText = a.cells[columnIndex].textContent.trim();
+                        const bText = b.cells[columnIndex].textContent.trim();
+                        if (!isNaN(aText) && !isNaN(bText)) {
+                            return asc ? aText - bText : bText - aText;
+                        }
+                        return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+                    });
+
+                    rows.forEach(row => tbody.appendChild(row));
+                }
+            </script>
+        </main>
+        <%- include('partials/footer') %>
+    </body>
+</html>
