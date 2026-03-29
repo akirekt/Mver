@@ -78,7 +78,14 @@
                             // Check if value is long (more than 80 characters)
                             if (value.length > 80) {
                                 valueCell.classList.add('truncated');
-                                valueCell.innerHTML = `<div class="value-content">${value}</div>`;
+                                const truncatedText = value.substring(0, 80) + '...';
+                                const valueContent = document.createElement('div');
+                                valueContent.classList.add('value-content');
+                                valueContent.textContent = truncatedText;
+                                valueCell.appendChild(valueContent);
+
+                                // Store full value for later use
+                                valueCell.dataset.fullValue = value;
 
                                 // Create show more button
                                 const showMoreBtn = document.createElement('button');
@@ -88,9 +95,11 @@
                                     e.stopPropagation();
                                     if (valueCell.classList.contains('expanded')) {
                                         valueCell.classList.remove('expanded');
+                                        valueContent.textContent = truncatedText;
                                         showMoreBtn.textContent = 'Pokaż więcej';
                                     } else {
                                         valueCell.classList.add('expanded');
+                                        valueContent.textContent = value;
                                         showMoreBtn.textContent = 'Pokaż mniej';
                                     }
                                 });
@@ -104,11 +113,13 @@
                             metadataTable.appendChild(row);
                         }
 
-                        // Adjust tag column width to fit longest tag
-                        const tagColumnWidth = Math.max(...Object.keys(allMeta).map(tag => tag.length)) * 8; // Approximate width per character
-                        metadataTable.querySelectorAll('th, td:first-child').forEach(cell => {
-                            cell.style.width = `${tagColumnWidth}px`;
-                        });
+                        // Measure actual pixel width of the longest tag using canvas
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        ctx.font = '20px sans-serif';
+                        const longestTagWidth = Math.max(...Object.keys(allMeta).map(tag => ctx.measureText(tag).width));
+                        const tagColumnWidth = Math.ceil(longestTagWidth) + 24; // +24 for cell padding
+                        metadataTable.querySelector('th').style.width = `${tagColumnWidth}px`;
                     });
                 }
 
