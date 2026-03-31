@@ -63,64 +63,89 @@
                     dropContent.style.display = 'none';
                     buttonContainer.style.display = 'block';
 
-                    // czytanie metadanych EXIF
-                    EXIF.getData(file, function() {
-                        const allMeta = EXIF.getAllTags(this);
-                        metadataTable.innerHTML = '<tr><th>Tag</th><th>Wartość</th></tr>';
-                        for (let tag in allMeta) {
-                            const row = document.createElement('tr');
-                            const tagCell = document.createElement('td');
-                            const valueCell = document.createElement('td');
+                    preview.onload = function() {
+                        const imgWidth = preview.naturalWidth;
+                        const imgHeight = preview.naturalHeight;
 
-                            tagCell.textContent = tag || ''; // Ensure empty tags are blank
-                            const value = String(allMeta[tag] || ''); // Ensure empty values are blank
+                        // czytanie metadanych EXIF
+                        EXIF.getData(file, function() {
+                            const allMeta = EXIF.getAllTags(this);
 
-                            // Check if value is long (more than 80 characters)
-                            if (value.length > 80) {
-                                valueCell.classList.add('truncated');
-                                const truncatedText = value.substring(0, 80) + '...';
-                                const valueContent = document.createElement('div');
-                                valueContent.classList.add('value-content');
-                                valueContent.textContent = truncatedText;
-                                valueCell.appendChild(valueContent);
+                            // Basic properties always available from the file and image object,
+                            // even when EXIF metadata has been stripped (e.g. after canvas export).
+                            const fileSizeStr = file.size >= 1024 * 1024
+                                ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+                                : (file.size / 1024).toFixed(2) + ' KB';
+                            const basicProps = {
+                                'FileName': file.name,
+                                'FileSize': fileSizeStr,
+                                'FileType': file.type,
+                                'ImageWidth': imgWidth,
+                                'ImageHeight': imgHeight
+                            };
 
-                                // Store full value for later use
-                                valueCell.dataset.fullValue = value;
+                            // Merge: basicProps as defaults, EXIF data overrides where keys match
+                            const combinedMeta = Object.assign({}, basicProps, allMeta);
 
-                                // Create show more button
-                                const showMoreBtn = document.createElement('button');
-                                showMoreBtn.classList.add('show-more-btn');
-                                showMoreBtn.textContent = 'Pokaż więcej';
-                                showMoreBtn.addEventListener('click', (e) => {
-                                    e.stopPropagation();
-                                    if (valueCell.classList.contains('expanded')) {
-                                        valueCell.classList.remove('expanded');
-                                        valueContent.textContent = truncatedText;
-                                        showMoreBtn.textContent = 'Pokaż więcej';
-                                    } else {
-                                        valueCell.classList.add('expanded');
-                                        valueContent.textContent = value;
-                                        showMoreBtn.textContent = 'Pokaż mniej';
-                                    }
-                                });
-                                valueCell.appendChild(showMoreBtn);
-                            } else {
-                                valueCell.textContent = value;
+                            metadataTable.innerHTML = '<tr><th>Tag</th><th>Wartość</th></tr>';
+                            for (let tag in combinedMeta) {
+                                const row = document.createElement('tr');
+                                const tagCell = document.createElement('td');
+                                const valueCell = document.createElement('td');
+
+                                tagCell.textContent = tag || ''; // Ensure empty tags are blank
+                                const value = String(combinedMeta[tag] || ''); // Ensure empty values are blank
+
+                                // Check if value is long (more than 80 characters)
+                                if (value.length > 80) {
+                                    valueCell.classList.add('truncated');
+                                    const truncatedText = value.substring(0, 80) + '...';
+                                    const valueContent = document.createElement('div');
+                                    valueContent.classList.add('value-content');
+                                    valueContent.textContent = truncatedText;
+                                    valueCell.appendChild(valueContent);
+
+                                    // Store full value for later use
+                                    valueCell.dataset.fullValue = value;
+
+                                    // Create show more button
+                                    const showMoreBtn = document.createElement('button');
+                                    showMoreBtn.classList.add('show-more-btn');
+                                    showMoreBtn.textContent = 'Pokaż więcej';
+                                    showMoreBtn.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        if (valueCell.classList.contains('expanded')) {
+                                            valueCell.classList.remove('expanded');
+                                            valueContent.textContent = truncatedText;
+                                            showMoreBtn.textContent = 'Pokaż więcej';
+                                        } else {
+                                            valueCell.classList.add('expanded');
+                                            valueContent.textContent = value;
+                                            showMoreBtn.textContent = 'Pokaż mniej';
+                                        }
+                                    });
+                                    valueCell.appendChild(showMoreBtn);
+                                } else {
+                                    valueCell.textContent = value;
+                                }
+
+                                row.appendChild(tagCell);
+                                row.appendChild(valueCell);
+                                metadataTable.appendChild(row);
                             }
 
-                            row.appendChild(tagCell);
-                            row.appendChild(valueCell);
-                            metadataTable.appendChild(row);
-                        }
-
-                        // Measure actual pixel width of the longest tag using canvas
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        ctx.font = '20px sans-serif';
-                        const longestTagWidth = Math.max(...Object.keys(allMeta).map(tag => ctx.measureText(tag).width));
-                        const tagColumnWidth = Math.ceil(longestTagWidth) + 24; // +24 for cell padding
-                        metadataTable.querySelector('th').style.width = `${tagColumnWidth}px`;
-                    });
+                            // Measure actual pixel width of the longest tag using canvas
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            ctx.font = '20px sans-serif';
+                            const tagKeys = Object.keys(combinedMeta);
+                            if (tagKeys.length > 0) {
+                                const longestTagWidth = Math.max(...tagKeys.map(tag => ctx.measureText(tag).width));
+                                const tagColumnWidth = Math.ceil(longestTagWidth) + 24; // +24 for cell padding
+                                metadataTable.querySelector('th').style.width = `${tagColumnWidth}px`;
+                            }
+                        });
+                    };
                 }
 
                 // Input file
