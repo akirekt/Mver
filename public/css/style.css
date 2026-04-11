@@ -387,7 +387,7 @@ header i {
     border-color: #0f3d33;
 }
 
-@media (max-width: portrait) {
+@media (orientation: portrait) {
     .hamburger {
         display: flex;
     }
@@ -399,14 +399,7 @@ header i {
     body.body-normal main {
         padding-top: 70px;
     }
-
-    .download,
-    .use-in-browser {
-        width: 80%;
-        box-sizing: border-box;
-    }
 }
-
 .lang-btn i {
     color: white;
     size: 1.1em;
