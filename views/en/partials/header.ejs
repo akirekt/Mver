@@ -1,0 +1,71 @@
+<header>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <div class="mobile-drawer" id="mobileDrawer">
+        <button class="drawer-close" id="drawerClose" aria-label="Close menu">&times;</button>
+        <a href="/<%= lang %>/">Mver</a>
+        <a href="/<%= lang %>/mver">Download</a>
+        <a href="/<%= lang %>/mver">Use in browser</a>
+        <a href="/<%= lang %>/news">News</a>
+        <a href="https://github.com/akirekt/Mver.git" target="_blank">OpenSource</a>
+        <hr class="drawer-divider">
+        <a href="buy-us-coffee">Buy us a coffee <i class="fa-solid fa-mug-saucer"></i></a>
+        <a href="/index.html">Authors</a>
+        <div class="drawer-lang">
+            <% ['en','pl','de','es'].forEach(l => { %>
+                <a href="/<%= l %>/" class="<%= lang === l ? 'lang-active' : '' %>"><%= l.toUpperCase() %></a>
+            <% }) %>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const btn = document.getElementById('hamburgerBtn');
+            const drawer = document.getElementById('mobileDrawer');
+            const overlay = document.getElementById('mobileOverlay');
+            const close = document.getElementById('drawerClose');
+            function openDrawer() {
+                drawer.classList.add('open');
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeDrawer() {
+                drawer.classList.remove('open');
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+            btn.addEventListener('click', openDrawer);
+            close.addEventListener('click', closeDrawer);
+            overlay.addEventListener('click', closeDrawer);
+        })();
+    </script>
+
+    <nav>
+        <div class="nav-left">
+            <a href="/<%= lang %>/">Mver</a>
+            <a href="/<%= lang %>/mver">Download</a>
+            <a href="/<%= lang %>/mver">Use in browser</a>
+            <a href="/<%= lang %>/news">News</a>
+            <a href="https://github.com/akirekt/Mver.git" target="_blank">OpenSource</a>
+        </div>
+        <div class="nav-right">
+
+            <div class="lang-dropdown">
+                <button class="lang-btn"><i class="fa-solid fa-globe"></i> <%= lang.toUpperCase() %> <i class="fa-solid fa-angle-up" class="arro"></i></button>
+                <div class="lang-menu">
+                    <p href="/en/">English</p>
+                    <a href="/pl/">Polish (Polski)</a>
+                    <a href="/de/">German (Deutsch)</a>
+                    <a href="/es/">Spanish (Español)</a>
+                </div>
+            </div>
+            <a href="buy-us-coffee">Buy us a coffee <i class="fa-solid fa-mug-saucer"></i></a>
+            <a href="/index.html">Authors</a>
+        </div>
+    </nav>
+</header>
